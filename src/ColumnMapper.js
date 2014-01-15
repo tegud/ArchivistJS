@@ -18,23 +18,24 @@ var ColumnMapper = function (mappings) {
     };
 
     var mapValue = function (column, value) {
-        if (mappings[column]) {
-            if (Array.isArray(mappings[column])){
-                _.each(mappings[column], function(columnMapping) {
-                    if (typeof columnMapping === 'string' && inbuiltParsers[columnMapping]) {
-                        value = inbuiltParsers[columnMapping](value);
-                    } else if (typeof columnMapping === 'function') {
-                        value = columnMapping(value);
-                    }
+        function findMapping (mapping) {
+            if (Array.isArray(mapping)){
+                _.each(mapping, function(mapping) {
+                    value = findMapping(mapping);
                 });
 
                 return value;
+            } else if (typeof mapping === 'string' && inbuiltParsers[mapping]) {
+                return inbuiltParsers[mapping](value);
+            } else if (typeof mapping === 'function') {
+                return mapping(value);
             }
-            if (typeof mappings[column] === 'string' && inbuiltParsers[mappings[column]]) {
-                return inbuiltParsers[mappings[column]](value);
-            } else if (typeof mappings[column] === 'function') {
-                return mappings[column](value);
-            }
+
+            return value;
+        }
+
+        if (mappings[column]) {
+            return findMapping( mappings[column]);
         }
 
         return value;

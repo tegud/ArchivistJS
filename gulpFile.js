@@ -1,34 +1,35 @@
 var gulp = require('gulp');
-var gutil = require('gulp-util');
 var mocha = require('gulp-mocha');
-var expect = require('expect.js');
+var gutil = require('gulp-util');
 var jshint = require('gulp-jshint');
 var jscs = require('gulp-jscs');
-var istanbul = require("gulp-istanbul");
+var watch = require('gulp-watch');
 
 var src = './src/**/*.js';
 var tests = './test/tests/**/*.js';
 
-gulp.task('cover', function (cb) {
-    gulp.src("./src/**/*.js")
-        .pipe(istanbul())
-        .on('end', cb);
+gulp.task('test', function () {
+    gulp.src(tests, { read: false })
+        .pipe(mocha({ reporter: 'spec' }))
+        .on('error', gutil.log);
 });
 
-gulp.task('default', function(){
-    gulp.run('cover', function () {
-        gulp.src([tests], { read: false })
-            .pipe(mocha({
-                    reporter: 'spec',
-                    globals: {
-                        expect: expect
-                    }
-                }))
-            .pipe(istanbul.writeReports());
-    });
-
+gulp.task('lint', function() {
     gulp.src([src, tests])
         .pipe(jshint())
         .pipe(jshint.reporter('default'))
-        .pipe(jscs());
+        .pipe(jscs())
+        .on('error', gutil.log);
+});
+
+gulp.task('default', function(){
+    gulp.run('test');
+    gulp.run('lint');
+});
+
+gulp.task('watch', function() {
+    gulp.src([src, tests], { read: false })
+        .pipe(watch(function(events, cb) {
+            gulp.run('default', cb);
+        }));
 });
