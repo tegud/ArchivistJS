@@ -25,13 +25,14 @@ describe('new TvRageRequest', function() {
     it('calls success callback with data', function(done) {
         allShowData = 'title,directory,tvrage,start date,end date,number of episodes,run time,network,country\r\n"House, M.D.",House,3908,Nov 2004,May 2012,"176 eps","60 min","Fox",US';
 
-        new TvRageRequest({
+        var request = new TvRageRequest({
             hostname: 'localhost',
-            port: httpPort,
-            success: function(data) {
-                done();
-                expect(data).to.be(allShowData);
-            }
+            port: httpPort
+        });
+
+        request.getSeries().then(function(data) {
+            done();
+            expect(data).to.be(allShowData);
         });
     });
 });
