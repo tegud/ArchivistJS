@@ -8,6 +8,12 @@ var parsers = {
     'run time': ['extractNumber', 'int']
 };
 
+var computedColumns = {
+    'finished': function(row) {
+        return row['end date'].indexOf('_') < 0;
+    }
+};
+
 var columnMapper = new ColumnMapper(parsers);
 
 var TvRageSeriesInfoParser = function() {
@@ -23,6 +29,14 @@ var TvRageSeriesInfoParser = function() {
                             }
 
                             row[column] = columnMapper.map(column, row[column]);
+                        }
+
+                        for(var computedColumn in computedColumns) {
+                            if(!computedColumns.hasOwnProperty(computedColumn)) {
+                                continue;
+                            }
+
+                            row[computedColumn] = computedColumns[computedColumn](row);
                         }
 
                         return row;

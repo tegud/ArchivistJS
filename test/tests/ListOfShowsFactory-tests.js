@@ -1,55 +1,38 @@
 var expect = require('expect.js');
-var Promise = require("bluebird");
-var ListOfShowsFactory = require('../../src/ListOfShowsFactory.js');
+var Promise = require('bluebird');
+var proxyquire = require('proxyquire');
 
-describe('new ListOfShowsFactory', function() {
-    var showData = [{
-        'title': 'House, M.D.',
-        'directory': 'House',
-        'tvrage': '3908',
-        'start date': 'Nov 2004',
-        'end date': 'May 2012',
-        'number of episodes': 176,
-        'run time': 60,
-        'network': 'Fox',
-        'country': 'US'
-    }, {
-        'title': 'Eastenders',
-        'directory': 'Eastenders',
-        'tvrage': '1234',
-        'start date': 'Nov 2004',
-        'end date': 'May 2012',
-        'number of episodes': 9999,
-        'run time': 30,
-        'network': 'BBC',
-        'country': 'UK'
-    }];
-
-    function justResolveWith(data) {
-        return function() {
-            return new Promise(function(resolve) {
-                resolve(data);
-            });
+var showData = 'title,directory,tvrage,start date,end date,number of episodes,run time,network,country\r\n"House, M.D.",House,3908,Nov 2004,May 2012,"176 eps","60 min","Fox",US\r\n"Homeland",Homeland,27811,Oct 2011,___ ____,"24+ eps","60 min","Showtime",US';
+var ListOfShowsFactory = proxyquire('../../src/ListOfShowsFactory.js', {
+    './TvRage/TvRageRequest.js': function(options) {
+        return {
+            getSeries: function() {
+                return new Promise( function(resolve, reject) {
+                    resolve(showData);
+                });
+            }
         };
     }
+});
 
+describe('new ListOfShowsFactory', function() {
     describe('calling build returns ListOfShows', function() {
         describe('can find tv series by name', function() {
             it('returns undefined for unknown tv series', function(done) {
-                var listOfShowsFactory = new ListOfShowsFactory({ getSeries: justResolveWith() }, { parseCsv: justResolveWith() }, { filter: justResolveWith(showData) });
+                var listOfShowsFactory = new ListOfShowsFactory({ });
 
                 listOfShowsFactory.build().then(function(listOfShows) {
                     done();
-                    expect(listOfShows.getShow('I dont know you')).to.be(undefined);
+                    expect(listOfShows.getShow('I don\'t know you')).to.be(undefined);
                 });
             });
 
-            it('sets tvrage id', function(done) {
-                var listOfShowsFactory = new ListOfShowsFactory({ getSeries: justResolveWith() }, { parseCsv: justResolveWith(showData) }, { filter: justResolveWith(showData) });
+            it('sets title', function(done) {
+                var listOfShowsFactory = new ListOfShowsFactory({ });
 
                 listOfShowsFactory.build().then(function(listOfShows) {
                     done();
-                    expect(listOfShows.getShow(showData[0].title).tvrage).to.be(showData[0].tvrage);
+                    expect(listOfShows.getShow('House, M.D.').title).to.be('House, M.D.');
                 });
             });
         });
